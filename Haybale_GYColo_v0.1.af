@@ -37,6 +37,7 @@
 ~~		prt (deprecated in VTank)														
 ~~ }																					
 
+
 ~~Must be in fellow and in GY Colo to start
 ~~Fellow leader is passed when Leader is out of keys.  Run a check to see who has keys and passes leader to them.
 
@@ -47,6 +48,7 @@
 ~~482E0121 CellE Surface drop for Keyturnin 
 ~~Lord Cynreft Mhoire
 ~~Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form." - once a player gets this, if leader go to keycheck, if follower go to standby
+
 
 STATE: {Default} ~~ {
 	IF:	ChatMatch {  %% Haybale_GYColo v.0.1 by Raile and Che of DNF %%  }
@@ -80,6 +82,8 @@ STATE: {Default} ~~ {
 				ChatExpr {`/t `+getcharstringprop[1]+`, This meta was designed by Raile and Che for Drunkenfell.`}
 				SetState {End}
 ~~ }
+
+
 STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes to Reward when Lord Cynreft Mhoire NPC appears)
 	IF:	Always
 		DO:	DoExpr {vtsetsetting[EnableCombat,`1`]}
@@ -107,6 +111,8 @@ STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes
 			ChatMatch {Lord Cynreft says, "My time on this world is brief! Speak with me quickly heroes."}
 		DO:	SetState {Reward}		
 ~~ }
+
+
 STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire appears as an NPC
 	IF:	Always
 		DO:	DoExpr {setvar[RunCount,$RunCount+1]}
@@ -122,6 +128,8 @@ STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire app
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
 		DO:	SetState {KeyCheck}
 ~~ }
+
+
 STATE: {Standby} ~~ {  ~~this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
 		DO:	ChatExpr {`/f !keycount=`getitemcountininventorybyname[Ornate Bone Key]}
@@ -129,6 +137,8 @@ STATE: {Standby} ~~ {  ~~this state is for followers, it will listen for when a 
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!combat\"$}
 		DO: SetState {Combat}
 ~~ }
+
+
 STATE: {KeyCheck} ~~ {  ~~checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
 	IF:	ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
@@ -140,19 +150,26 @@ STATE: {KeyCheck} ~~ {  ~~checks that the leader still has a key to turn in, if 
 		DO: ChatExpr {\/f \!keycheck}
 
 ~~ }
+
+
 STATE: {KeyTurnin} ~~ {  ~~goes outside, goes to the Guardian Statue, turns in the key - run a watchdog that starts at drop and goes til it gets the Guardian turned in
 	IF:	Never
 		DO:	None
 ~~ }
+
+
 STATE: {Stopped} ~~ {  ~~waits until the player enters GY Colo to resume
 	IF: BlockE 00950000
 		DO:	DoAll
 				SetState {Default}	
 ~~ }
+
+
 STATE: {End} ~~ {
 	IF:	Never
 		DO:	None
 ~~ }
+
 
 ~~========================= ONLY NAVS APPEAR BELOW THIS LINE =========================~~
 
