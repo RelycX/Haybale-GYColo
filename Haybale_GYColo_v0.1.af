@@ -38,16 +38,16 @@
 ~~ }																					
 
 
-~~Must be in fellow and in GY Colo to start
-~~Fellow leader is passed when Leader is out of keys.  Run a check to see who has keys and passes leader to them.
+~~ Must be in fellow and in GY Colo to start
+~~ Fellow leader is passed when Leader is out of keys.  Run a check to see who has keys and passes leader to them.
 
-~~Shade of Parieth (NPC to start GY Colo)
-~~482E0016 - CellE for Guardian Statue NPC for Ornate Bone Key (/ub prepclick yes 10) then use statue chatcap "The bone key turns with a loud click and crumbles to dust."
-~~0095010F - CellE for GY Colo drop
-~~0095010B - CellE for ~~Shade of Parieth (NPC to start GY Colo)
-~~482E0121 CellE Surface drop for Keyturnin 
-~~Lord Cynreft Mhoire
-~~Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form." - once a player gets this, if leader go to keycheck, if follower go to standby
+~~ Shade of Parieth (NPC to start GY Colo)
+~~ 482E0016 - CellE for Guardian Statue NPC for Ornate Bone Key (/ub prepclick yes 10) then use statue chatcap "The bone key turns with a loud click and crumbles to dust."
+~~ 0095010F - CellE for GY Colo drop
+~~ 0095010B - CellE for ~~Shade of Parieth (NPC to start GY Colo)
+~~ 482E0121 CellE Surface drop for Keyturnin 
+~~ Lord Cynreft Mhoire
+~~ Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form." - once a player gets this, if leader go to keycheck, if follower go to standby
 
 
 STATE: {Default} ~~ {
@@ -87,7 +87,7 @@ STATE: {Default} ~~ {
 ~~ }
 
 
-STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes to Reward when Lord Cynreft Mhoire NPC appears)
+STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (changes to Reward when Lord Cynreft Mhoire NPC appears)
 	IF:	Always
 		DO:	DoExpr {vtsetsetting[EnableCombat,`1`]}
 		
@@ -116,7 +116,7 @@ STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes
 ~~ }
 
 
-STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire appears as an NPC
+STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire appears as an NPC
 	IF:	Always
 		DO:	DoExpr {setvar[RunCount,$RunCount+1]}
 			ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
@@ -133,7 +133,7 @@ STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire app
 ~~ }
 
 
-STATE: {Standby} ~~ {  ~~this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys
+STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
 		DO:	ChatExpr {`/f !keycount=`getitemcountininventorybyname[Ornate Bone Key]}
 		
@@ -142,26 +142,26 @@ STATE: {Standby} ~~ {  ~~this state is for followers, it will listen for when a 
 ~~ }
 
 
-STATE: {KeyCheck} ~~ {  ~~checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
+STATE: {KeyCheck} ~~ {  ~~ checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
 	IF:	ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
 				SetState {KeyTurnin}
 				
 	IF:	All
-			SecsInStateGE 10  ~~this delay allows for everyone to turn in during the Reward state before checking who has keys
+			SecsInStateGE 10  ~~ this delay allows for everyone to turn in during the Reward state before checking who has keys
 			ItemCountLE 0 {Ornate Bone Key}
 		DO: ChatExpr {\/f \!keycheck}
 
 ~~ }
 
 
-STATE: {KeyTurnin} ~~ {  ~~goes outside, goes to the Guardian Statue, turns in the key - run a watchdog that starts at drop and goes til it gets the Guardian turned in
+STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in the key - run a watchdog that starts at drop and goes til it gets the Guardian turned in
 	IF:	Never
 		DO:	None
 ~~ }
 
 
-STATE: {Stopped} ~~ {  ~~waits until the player enters GY Colo to resume
+STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume
 	IF: BlockE 00950000
 		DO:	DoAll
 				SetState {Default}	
