@@ -143,13 +143,15 @@ STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a
 ~~ }
 
 
-STATE: {KeyCheck} ~~ {  ~~ checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
-	IF:	ItemCountGE 1 {Ornate Bone Key}
+STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
+	IF:	All
+			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
+			ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
 				SetState {KeyTurnin}
 				
 	IF:	All
-			SecsInStateGE 10  ~~ this delay allows for everyone to turn in during the Reward state before checking who has keys
+			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
 			ItemCountLE 0 {Ornate Bone Key}
 		DO: ChatExpr {\/f \!keycheck}
 
@@ -172,6 +174,32 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 		DO:	DoAll
 				DoExpr {vtsetsetting[NavPriorityBoost,`1`]}
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
+				EmbedNav nav3 {SurfaceExit}
+	IF:	All
+			NavEmpty
+			CellE 482E0121
+		DO: DoAll
+				SetWatchdog 3 15 {Stuck}
+				DoExpr {setvar[Turnin, Statue]}
+				EmbedNav nav4 {ToGuardianStatue}
+	IF:	All
+			NavEmpty
+			CellE 482E0016
+		DO:	DoAll
+				ClearWatchdog
+				EmbedNav nav5 {UseGuardianStatue}
+	IF:	All
+			CellE 482E0016
+			ChatMatch {The bone key turns with a loud click and crumbles to dust.}
+		DO:	DoAll
+				SetWatchdog 3 10 {Stuck}
+				DoExpr {setvar[Turnin, Portal]}
+				EmbedNav nav6 {IntoGYColo}
+	IF:	All
+			NavEmpty
+			CellE 0095010F
+		DO:	DoAll
+				~~LEFT OFF HERE
 ~~ }
 
 
@@ -179,6 +207,22 @@ STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume
 	IF: BlockE 00950000
 		DO:	DoAll
 				SetState {Default}	
+~~ }
+
+
+STATE: {Stuck} ~~ {
+	IF:	Always
+		DO:	EmbedNav nav9 {GYRecall}
+	IF:	All
+			Expr {$Turnin}==Statue
+			CellE 482D0104
+		DO:	EmbedNav nav10 {GYRecallToStatue}
+	IF:	All
+			Expr {$Turnin}==Portal
+			CellE 482D0104
+		DO:	EmbedNav nav11 {GYRecallToPortal}	
+		
+				
 ~~ }
 
 
@@ -215,7 +259,7 @@ NAV: nav4 once ~~ { ~~To Guardian Statue
 	pnt -44.0439258257548 -64.6421573003133 0.0641565958658854
 	pnt -44.071154721578 -64.6330051422119 0.0666874965031942
 ~~ }	
-NAV: nav5 once ~~ { ~~Guardian Statue turn in
+NAV: nav5 circular ~~ { ~~Guardian Statue turn in
 	cht -44.0707230885824 -64.632309850057 0.0666874965031942 {/ub prepclick yes 10}
 	pau -44.0707230885824 -64.632309850057 0.0666874965031942 1000
 	cht -44.0707230885824 -64.632309850057 0.0666874965031942 {/ub usel Guardian Statue}
@@ -325,4 +369,42 @@ NAV: nav10 once ~~ {  ~~ GY Recall to Guardian Statue
 	pnt -43.9763778050741 -64.6792069117228 0.0338134328524272
 	pnt -44.0476749738057 -64.6503491401672 0.0656896511713664
 	pnt -44.0741304397583 -64.6320889790853 0.0666874965031942
+~~ }
+NAV: nav11 once ~~ {  ~~stuck recovery run from GYRecall
+	pnt -43.9898598670959 -65.3799650192261 -0.0616458376248678
+	pnt -43.9663567860921 -65.367388343811 -0.0616458376248678
+	pnt -43.9692995389303 -65.3928707758586 -0.0616458376248678
+	pnt -43.9787655830383 -65.4272278467814 -0.0616458376248678
+	pnt -44.0105538050334 -65.4407850583394 -0.0616458376248678
+	pnt -44.012278842926 -65.4278753916422 -0.0616458376248678
+	pnt -44.0116811116536 -65.3984380722046 -0.0400158882141113
+	pnt -44.0111959457397 -65.3614776611328 -0.0399791717529297
+	pnt -43.9934631347656 -65.3631035486857 -0.0399791717529297
+	pnt -44.0012349446615 -65.3776292800903 -0.0399791717529297
+	pnt -44.0009787877401 -65.406724357605 -0.0183124979337056
+	pnt -44.0007183710734 -65.4254510561625 -0.0183124979337056
+	pnt -43.9873765627543 -65.4254872639974 -0.0183124979337056
+	pnt -43.987388197581 -65.4069164911906 -0.0177986323833466
+	pnt -43.9875864346822 -65.3806852340698 0.00318637142578761
+	pnt -43.9898914019267 -65.3613156000773 0.00335416744152705
+	pnt -43.9970740000407 -65.3619568506877 0.00335416744152705
+	pnt -44.0023763974508 -65.3761331558228 0.00335416744152705
+	pnt -44.0005058288574 -65.3813285827637 0.00591744134823481
+	pnt -44.0009964942932 -65.4044277191162 0.0243967493375142
+	pnt -44.0010150591532 -65.4319268226623 0.0250208338101705
+	pnt -43.9702364285787 -65.4292667388916 0.0250208338101705
+	pnt -43.9665790557861 -65.3851797103882 0.0250208338101705
+	pnt -43.9584655761719 -65.3040209452311 0.0250208338101705
+	pnt -43.9520174344381 -65.1522207895915 0.0251889526844025
+	pnt -43.9488005320231 -65.01938012441 0.0150354365507762
+	pnt -43.9493664423625 -64.9585548559825 0.00954223275184631
+	pnt -43.9500676790873 -64.8617679595947 0.0230707863966624
+	pnt -43.9663016637166 -64.8545871098836 0.0269732574621836
+	pnt -44.0212270736694 -64.8287839889526 0.0368920127550761
+	pnt -44.0438707351685 -64.7587424914042 0.0548539956410726
+	pnt -44.0950157642365 -64.6526486714681 0.0660253365834554
+	pnt -44.1004617373149 -64.6203585624695 0.0749830881754557
+	pnt -44.0991804917653 -64.6069468816121 0.0750208298365275
+	pnt -44.0999232610067 -64.5956731160482 0.0750208298365275
+	ptl -44.0989941596985 -64.5963679631551 0.0750208298365275 -44.1004166603088 -64.5902500152588 0.0747375041246414 14 {Gateway}
 ~~ }
