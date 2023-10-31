@@ -51,8 +51,10 @@
 STATE: {Default} ~~ {
 	IF:	ChatMatch {  %% Haybale_GYColo v.0.1 by Raile and Che of DNF %%  }
 		DO:	None
+		
 	IF:	Always
 		DO:	Chat {/ub opt set VTank.PatchExpressionEngine true}
+		
 	IF:	Always
 		DO:	DoAll
 				DoExpr {clearallvars[]}
@@ -60,13 +62,16 @@ STATE: {Default} ~~ {
 				DoExpr {vtsetsetting[EnableBuffing,`1`]}
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
 				DoExpr {vtsetsetting[EnableNav,`1`]}
-				DoExpr {vtsetsetting[AttackDistance,`0.08333333`]}			
+				DoExpr {vtsetsetting[AttackDistance,`0.08333333`]}
+				
 	IF: Not BlockE 00950000
 		DO:	DoAll
 				ChatExpr {`/t `+getcharstringprop[1]+`, Must be within GY Colosseum to begin.`}
 				SetState {Stopped}
+				
 	IF:	Expr {getfellowshipisleader[]==1}
 		DO:	SetState {KeyCheck}
+		
 	IF: Expr {getfellowshipstatus[]==0}
 		DO: Chat {/say I need a fellow invite.}
 
@@ -78,6 +83,7 @@ STATE: {Default} ~~ {
 STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes to Reward when Lord Cynreft Mhoire NPC appears)
 	IF:	Always
 		DO:	DoExpr {vtsetsetting[EnableCombat,`1`]}
+		
 	IF:	All
 			Any
 				ItemCountGE 1 {Jaria's Rune of Dispel}
@@ -95,8 +101,7 @@ STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes
 		DO:	DoAll
 				Chat {/ub use Jaria's Rune of Dispel}
 				SetState {Combat}
-	IF:	
-		DO:	
+
 	IF:	Any
 			DoExpr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]}
 			ChatMatch {Lord Cynreft says, "My time on this world is brief! Speak with me quickly heroes."}
@@ -106,10 +111,12 @@ STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire app
 	IF:	Always
 		DO:	DoExpr {setvar[RunCount,$RunCount+1]}
 			ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `$RunCount` times this session.`}
+			
 	IF:	All
 			Expr {getfellowshipisleader[]==0}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
 		DO:	SetState {Standby}
+		
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
@@ -118,6 +125,7 @@ STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire app
 STATE: {Standby} ~~ {  ~~this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
 		DO:	ChatExpr {`/f !keycount=`getitemcountininventorybyname[Ornate Bone Key]}
+		
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!combat\"$}
 		DO: SetState {Combat}
 ~~ }
@@ -125,6 +133,7 @@ STATE: {KeyCheck} ~~ {  ~~checks that the leader still has a key to turn in, if 
 	IF:	ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
 				SetState {KeyTurnin}
+				
 	IF:	All
 			SecsInStateGE 10  ~~this delay allows for everyone to turn in during the Reward state before checking who has keys
 			ItemCountLE 0 {Ornate Bone Key}
