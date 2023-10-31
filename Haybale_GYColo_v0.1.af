@@ -110,7 +110,7 @@ STATE: {Combat} ~~ {  ~~Combat is the state that's active when fighting (changes
 STATE: {Reward} ~~ {  ~~is the state that is called when Lord Cynreft Mhoire appears as an NPC
 	IF:	Always
 		DO:	DoExpr {setvar[RunCount,$RunCount+1]}
-			ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `$RunCount` times this session.`}
+			ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
 			
 	IF:	All
 			Expr {getfellowshipisleader[]==0}
@@ -141,8 +141,8 @@ STATE: {KeyCheck} ~~ {  ~~checks that the leader still has a key to turn in, if 
 
 ~~ }
 STATE: {KeyTurnin} ~~ {  ~~goes outside, goes to the Guardian Statue, turns in the key - run a watchdog that starts at drop and goes til it gets the Guardian turned in
-	IF:	
-		DO:	
+	IF:	Never
+		DO:	None
 ~~ }
 STATE: {Stopped} ~~ {  ~~waits until the player enters GY Colo to resume
 	IF: BlockE 00950000
