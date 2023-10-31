@@ -74,6 +74,9 @@ STATE: {Default} ~~ {
 	IF:	Expr {getfellowshipisleader[]==1}
 		DO:	SetState {KeyCheck}
 		
+	IF:	Expr {getfellowshipisleader[]==0}
+		DO:	SetState {Standby}
+		
 	IF: Expr {getfellowshipstatus[]==0}
 		DO: Chat {/say I need a fellow invite.}
 
