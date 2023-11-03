@@ -156,7 +156,7 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 		DO: ChatExpr {\/f \!keycheck}
 
 
-	IF: ChatCapture {} {}  ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
+	IF: ChatCapture {\[Fellowship\] (?<name>.*) (say|says), "!keycount=(?<keycount>.*)"} {}  ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
 		DO: DoExpr {$KeySeenCount=$KeySeenCount+1}
 
 	IF: Expr {$capturegroup_keycount>$HighestKeyCount}  ~~ Set the highest key count
