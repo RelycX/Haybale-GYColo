@@ -74,11 +74,11 @@ STATE: {Default} ~~ {
 	IF:	Expr {getfellowshipisleader[]==1}
 		DO:	SetState {KeyCheck}
 		
-	IF:	Expr {getfellowshipisleader[]==0}
-		DO:	SetState {Standby}
-		
 	IF: Expr {getfellowshipstatus[]==0}
 		DO: Chat {/say I need a fellow invite.}
+		
+	IF:	Expr {getfellowshipisleader[]==0}
+		DO:	SetState {Standby}
 
 	IF:	Not Expr {getworldname[]==Drunkenfell}
 		DO:	DoAll
@@ -91,7 +91,11 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 	IF:	Always
 		DO:	DoAll
 				DoExpr {vtsetsetting[EnableCombat,`1`]}
-				DoExpr {vtsetsetting[NavPriorityBoost,`1`]}		
+
+	IF:	Expr {getfellowshipisleader[]==1}
+		DO:	DoAll
+				Chat {/f !combat}
+		
 	IF:	All
 			Any
 				ItemCountGE 1 {Jaria's Rune of Dispel}
@@ -119,8 +123,10 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 
 STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire appears as an NPC
 	IF:	Always
-		DO:	DoExpr {setvar[RunCount,$RunCount+1]}
-			ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
+		DO:	DoAll
+				EmbedNav nav2 {CollectReward}
+				DoExpr {setvar[RunCount,$RunCount+1]}
+				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
 			
 	IF:	All
 			Expr {getfellowshipisleader[]==0}
@@ -134,12 +140,17 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 ~~ }
 
 
-STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys
+STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys and will go into combat when needed
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
 		DO:	ChatExpr {`/f !keycount=`getitemcountininventorybyname[Ornate Bone Key]}
 		
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!combat\"$}
-		DO: SetState {Combat}
+		DO: DoAll
+				EmbedNav nav1 {CombatPosition}
+				SetState {Combat}
+		
+	IF:	MobsInDist_Name 5 30 {Pyre Minion}  ~~This will catch anyone running the meta that isn't in the fellow when combat starts
+		DO:	SetState {Combat}
 ~~ }
 
 
@@ -148,6 +159,7 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
 			ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
+				ChatExpr {`/f I am the leader and I have `getitemcountininventorybyname[Ornate Bone Key]` Ornate Bone Keys remaining.`}
 				SetState {KeyTurnin}
 				
 	IF:	All
@@ -172,9 +184,9 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in the key - run a watchdog that starts at drop and goes til it gets the Guardian turned in
 	IF:	Always
 		DO:	DoAll
-				DoExpr {vtsetsetting[NavPriorityBoost,`1`]}
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
 				EmbedNav nav3 {SurfaceExit}
+	
 	IF:	All
 			NavEmpty
 			CellE 482E0121
@@ -182,12 +194,14 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 				SetWatchdog 3 15 {Stuck}
 				DoExpr {setvar[Turnin, Statue]}
 				EmbedNav nav4 {ToGuardianStatue}
+	
 	IF:	All
 			NavEmpty
 			CellE 482E0016
 		DO:	DoAll
 				ClearWatchdog
 				EmbedNav nav5 {UseGuardianStatue}
+	
 	IF:	All
 			CellE 482E0016
 			ChatMatch {The bone key turns with a loud click and crumbles to dust.}
@@ -195,33 +209,52 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 				SetWatchdog 3 10 {Stuck}
 				DoExpr {setvar[Turnin, Portal]}
 				EmbedNav nav6 {IntoGYColo}
+	
 	IF:	All
 			NavEmpty
 			CellE 0095010F
 		DO:	DoAll
-				~~LEFT OFF HERE
+				Chat {/f The next round is about to start.}
+				EmbedNav nav8 {ToParieth}
+	IF:	All
+			NavEmpty
+			Expr {coordinatedistanceflat[getplayercoordinates[], wobjectgetphysicscoordinates[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]<5}
+		DO:	EmbedNav nav7 {TalkToParieth}
+	
+	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
+		DO:	DoAll
+				EmbedNav nav1 {CombatPosition}
+				SetState {Combat}	
+			
 ~~ }
 
 
 STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume
 	IF: BlockE 00950000
-		DO:	DoAll
-				SetState {Default}	
+		DO:	SetState {Default}	
 ~~ }
 
 
 STATE: {Stuck} ~~ {
 	IF:	Always
 		DO:	EmbedNav nav9 {GYRecall}
+	
 	IF:	All
 			Expr {$Turnin}==Statue
 			CellE 482D0104
 		DO:	EmbedNav nav10 {GYRecallToStatue}
+	
 	IF:	All
 			Expr {$Turnin}==Portal
 			CellE 482D0104
 		DO:	EmbedNav nav11 {GYRecallToPortal}	
-		
+	
+	IF:	All
+			NavEmpty
+			Any
+				CellE 482E0016
+				CellE 0095010F
+		DO:	SetState {KeyTurnin}
 				
 ~~ }
 
@@ -263,7 +296,7 @@ NAV: nav5 circular ~~ { ~~Guardian Statue turn in
 	cht -44.0707230885824 -64.632309850057 0.0666874965031942 {/ub prepclick yes 10}
 	pau -44.0707230885824 -64.632309850057 0.0666874965031942 1000
 	cht -44.0707230885824 -64.632309850057 0.0666874965031942 {/ub usel Guardian Statue}
-	pau -44.0707230885824 -64.632309850057 0.0666874965031942 1000
+	pau -44.0707230885824 -64.632309850057 0.0666874965031942 3000
 ~~ }	
 NAV: nav6 once ~~ { ~~Guardian Statue to Gateway back into GY Colo
 	pnt -44.0599815686544 -64.6558105786641 0.0652348518371582
@@ -272,17 +305,16 @@ NAV: nav6 once ~~ { ~~Guardian Statue to Gateway back into GY Colo
 	pnt -44.0997279167175 -64.5920482635498 0.0750208298365275
 	ptl -44.0707230885824 -64.632309850057 0.0666874965031942 -44.1004166603088 -64.5902500152588 0.0747375041246414 14 {Gateway}
 ~~ }
-NAV: nav7 once ~~ { ~~GYColo drop to Shade of Parieth to start
-	pnt -101.865825812022 17.2027072310448 2.08333134651184E-05
+NAV: nav7 circular ~~ { ~~GYColo drop to Shade of Parieth to start
 	tlk -44.0707230885824 -64.632309850057 0.0666874965031942 -101.866666666667 17.2106385827065 2.50001739914296E-05 37 {Shade of Parieth}
-	pau -44.0707230885824 -64.632309850057 0.0666874965031942 2000
+	pau -44.0707230885824 -64.632309850057 0.0666874965031942 3000
 ~~ }
 NAV: nav8 once ~~ { ~~Shade of Parieth NPC
 	pnt -101.865380676587 17.1986148357391 2.08333134651184E-05
 ~~ }
 NAV: nav9 once ~~ {  ~~ GY Recall
 	rcl 47.1886339505513 -83.4169729153315 0.573354148864746 {Call of the Mhoire Forge}
-	pau 47.1886339505513 -83.4169729153315 0.573354148864746 2000
+	pau 47.1886339505513 -83.4169729153315 0.573354148864746 3000
 ~~ }
 NAV: nav10 once ~~ {  ~~ GY Recall to Guardian Statue
 	pnt -43.9884037653605 -65.3762583414714 -0.0616458336512248
@@ -370,7 +402,7 @@ NAV: nav10 once ~~ {  ~~ GY Recall to Guardian Statue
 	pnt -44.0476749738057 -64.6503491401672 0.0656896511713664
 	pnt -44.0741304397583 -64.6320889790853 0.0666874965031942
 ~~ }
-NAV: nav11 once ~~ {  ~~stuck recovery run from GYRecall
+NAV: nav11 once ~~ {  ~~stuck recovery run from GYRecall to portal
 	pnt -43.9898598670959 -65.3799650192261 -0.0616458376248678
 	pnt -43.9663567860921 -65.367388343811 -0.0616458376248678
 	pnt -43.9692995389303 -65.3928707758586 -0.0616458376248678
