@@ -59,6 +59,12 @@ STATE: {Default} ~~ {
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
 				DoExpr {vtsetsetting[EnableNav,`1`]}
 				DoExpr {vtsetsetting[AttackDistance,`0.08333333`]}
+				
+	IF: Always
+		DO: DoAll
+				DoExpr {setvar[HighestKeyCount, 0]}
+				DoExpr {setvar[HighestKeyName, ``]}
+				DoExpr {setvar[KeySeenCount, 0]}
 	
 	IF:	Not Expr {getworldname[]==Drunkenfell}
 		DO:	DoAll
