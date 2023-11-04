@@ -201,9 +201,9 @@ STATE: {KeyListen} ~~ {
 				DoExpr {$KeySeenCount=$KeySeenCount+1}
 				SetState {KeyListen}
 
-	IF: Expr {$capturegroup_keycount>$HighestKeyCount}  ~~ Set the highest key count
+	IF: Expr {cnumber[$capturegroup_keycount]>$HighestKeyCount}  ~~ Set the highest key count
 		DO: DoAll
-				DoExpr {$HighestKeyCount=$capturegroup_keycount}
+				DoExpr {$HighestKeyCount=cnumber[$capturegroup_keycount]}
 				DoExpr {$HighestKeyName=$capturegroup_name}
 				SetState {AssignLeader}
 
