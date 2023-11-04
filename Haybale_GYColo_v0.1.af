@@ -90,7 +90,12 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 		DO:	DoAll
 				DoExpr {vtsetsetting[NavPriorityBoost,`0`]}
 				DoExpr {vtsetsetting[EnableCombat,`1`]}
-	
+				
+	IF: Always
+		DO: DoAll
+				DoExpr {setvar[Runtime, stopwatchcreate[]]}
+				DoExpr {stopwatchstart[$Runtime]}
+
 	IF:	All
 			Any
 				ItemCountGE 1 {Jaria's Rune of Dispel}
@@ -112,7 +117,7 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 	IF:	Any
 			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]}
 			ChatMatch {Lord Cynreft says, "My time on this world is brief! Speak with me quickly heroes."}
-		DO:	SetState {Reward}		
+		DO:	SetState {Reward}
 ~~ }
 
 
@@ -122,7 +127,15 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 				EmbedNav nav2 {CollectReward}
 				DoExpr {setvar[RunCount,$RunCount+1]}
 				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
-			
+	
+	IF: Expr {getfellowshipisleader[]==1}
+		DO: DoAll
+				DoExpr {stopwatchstop[$Runtime]}
+				DoExpr {$minutes=cstr[ceiling[stopwatchelapsedseconds[$Runtime]/60]]}
+				DoExpr {$seconds=ceiling[stopwatchelapsedseconds[$Runtime]%60]}
+				DoExpr {$seconds=ifthen[$seconds<=9, `\`0\`+cstr[$seconds]`, `cstr[$seconds]`]}
+				ChatExpr {`/f Elapsed time: `+$minutes+`:`+$seconds}
+	
 	IF:	All
 			Expr {getfellowshipisleader[]==0}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
