@@ -216,6 +216,7 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 			NavEmpty
 			CellE 0095010F
 		DO:	DoAll
+				ClearWatchdog
 				Chat {/f The next round is about to start.}
 				EmbedNav nav8 {ToParieth}
 	IF:	All
