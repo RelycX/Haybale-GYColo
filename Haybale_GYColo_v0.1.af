@@ -88,6 +88,7 @@ STATE: {Default} ~~ {
 STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (changes to Reward when Lord Cynreft Mhoire NPC appears)
 	IF:	Always
 		DO:	DoAll
+				DoExpr {vtsetsetting[NavPriorityBoost,`0`]}
 				DoExpr {vtsetsetting[EnableCombat,`1`]}
 	
 	IF:	All
@@ -139,8 +140,11 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 
 
 STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a keycheck is initiated if the leader is out of keys and will go into combat when needed
+	IF:	Expr {getfellowshipisleader[]==1}
+		DO:	SetState {KeyCheck}
+		
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
-		DO:	ChatExpr {`/f !keycount=`getitemcountininventorybyname[Ornate Bone Key]}
+		DO:	ChatExpr {`/f !keycount=`+getitemcountininventorybyname[Ornate Bone Key]}
 		
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!combat\"$}
 		DO: DoAll
@@ -224,7 +228,11 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
 		DO:	DoAll
 				EmbedNav nav1 {CombatPosition}
-				SetState {Combat}	
+
+	IF:	All
+			NavEmpty
+			CellE 0095010D
+		DO:	SetState {Combat}	
 			
 ~~ }
 
@@ -272,7 +280,11 @@ STATE: {FirstTurnin} ~~ {
 	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
 		DO:	DoAll
 				EmbedNav nav1 {CombatPosition}
-				SetState {Combat}	
+
+	IF:	All
+			NavEmpty
+			CellE 0095010D
+		DO:	SetState {Combat}	
 ~~ }
 
 STATE: {End} ~~ {
