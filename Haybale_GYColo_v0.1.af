@@ -201,7 +201,9 @@ STATE: {KeyListen} ~~ {
 				DoExpr {$KeySeenCount=$KeySeenCount+1}
 				SetState {KeyListen}
 
-	IF: Expr {cnumber[$capturegroup_keycount]>$HighestKeyCount}  ~~ Set the highest key count
+	IF: All
+			ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {}
+			Expr {cnumber[$capturegroup_keycount]>$HighestKeyCount}  ~~ Set the highest key count
 		DO: DoAll
 				DoExpr {$HighestKeyCount=cnumber[$capturegroup_keycount]}
 				DoExpr {$HighestKeyName=$capturegroup_name}
