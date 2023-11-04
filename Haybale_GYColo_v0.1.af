@@ -199,13 +199,13 @@ STATE: {KeyListen} ~~ {
 	IF: ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {}  ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
 		DO: DoAll
 				DoExpr {$KeySeenCount=$KeySeenCount+1}
-				SetState {KeyCheck}
+				SetState {KeyListen}
 
 	IF: Expr {$capturegroup_keycount>$HighestKeyCount}  ~~ Set the highest key count
 		DO: DoAll
 				DoExpr {$HighestKeyCount=$capturegroup_keycount}
 				DoExpr {$HighestKeyName=$capturegroup_name}
-				SetState {KeyCheck}
+				SetState {AssignLeader}
 
 	IF: Expr {$KeySeenCount==getfellowshipcount[]-1}  ~~ We've seen all the key counts handle assigning leader
 		DO: None
@@ -315,6 +315,11 @@ STATE: {FirstTurnin} ~~ {
 			NavEmpty
 			CellE 0095010D
 		DO:	SetState {Combat}	
+~~ }
+
+STATE: {AssignLeader} ~~ {
+	IF:	Never
+		DO:	None
 ~~ }
 
 STATE: {End} ~~ {
