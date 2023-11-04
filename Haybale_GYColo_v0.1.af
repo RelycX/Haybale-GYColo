@@ -184,12 +184,15 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 
 
 	IF: ChatCapture {\[Fellowship\] (?<name>.*) (say|says), "!keycount=(?<keycount>.*)"} {}  ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
-		DO: DoExpr {$KeySeenCount=$KeySeenCount+1}
+		DO: DoAll
+				DoExpr {$KeySeenCount=$KeySeenCount+1}
+				SetState {KeyCheck}
 
 	IF: Expr {$capturegroup_keycount>$HighestKeyCount}  ~~ Set the highest key count
 		DO: DoAll
 				DoExpr {$HighestKeyCount=$capturegroup_keycount}
 				DoExpr {$HighestKeyName=$capturegroup_name}
+				SetState {KeyCheck}
 
 	IF: Expr {$KeySeenCount==getfellowshipcount[]}  ~~ We've seen all the key counts handle assigning leader
 		DO: None
