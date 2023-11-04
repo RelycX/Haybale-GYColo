@@ -157,7 +157,9 @@ STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a
 		DO:	SetState {KeyCheck}
 		
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
-		DO:	ChatExpr {`/f !keycount=`+getitemcountininventorybyname[Ornate Bone Key]}
+		DO:	DoAll
+				ChatExpr {`/f !keycount=`+getitemcountininventorybyname[Ornate Bone Key]}
+				SetState {Standby}
 		
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!combat\"$}
 		DO: DoAll
