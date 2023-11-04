@@ -37,17 +37,11 @@
 ~~		prt (deprecated in VTank)														
 ~~ }																					
 
-
 ~~ Must be in fellow and in GY Colo to start
-~~ Fellow leader is passed when Leader is out of keys.  Run a check to see who has keys and passes leader to them.
-
-~~ Shade of Parieth (NPC to start GY Colo)
-~~ 482E0016 - CellE for Guardian Statue NPC for Ornate Bone Key (/ub prepclick yes 10) then use statue chatcap "The bone key turns with a loud click and crumbles to dust."
-~~ 0095010F - CellE for GY Colo drop
-~~ 0095010B - CellE for ~~Shade of Parieth (NPC to start GY Colo)
-~~ 482E0121 CellE Surface drop for Keyturnin 
-~~ Lord Cynreft Mhoire
-~~ Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form." - once a player gets this, if leader go to keycheck, if follower go to standby
+~~ 482E0016 - Guardian Statue NPC for Ornate Bone Key
+~~ 0095010F - GY Colo drop
+~~ 0095010B - Shade of Parieth (NPC to start GY Colo)
+~~ 482E0121 - Surface drop for Keyturnin 
 ~~ 482D0104 - GY Recall Drop
 
 STATE: {Default} ~~ {
@@ -65,13 +59,22 @@ STATE: {Default} ~~ {
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
 				DoExpr {vtsetsetting[EnableNav,`1`]}
 				DoExpr {vtsetsetting[AttackDistance,`0.08333333`]}
-				
+	
+	IF:	Not Expr {getworldname[]==Drunkenfell}
+		DO:	DoAll
+				ChatExpr {`/t `+getcharstringprop[1]+`, This meta was designed by Raile and Che for Drunkenfell and results outside of Drunkenfell may vary.`}	
+	
 	IF: Not BlockE 00950000
 		DO:	DoAll
 				ChatExpr {`/t `+getcharstringprop[1]+`, Must be within GY Colosseum to begin.`}
 				SetState {Stopped}
-				
-	IF:	Expr {getfellowshipisleader[]==1}
+
+	IF:	All
+			Expr {getfellowshipisleader[]==1}
+			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]}
+		DO:	SetState {FirstTurnin}
+	IF:	All
+			Expr {getfellowshipisleader[]==1}
 		DO:	SetState {KeyCheck}
 		
 	IF: Expr {getfellowshipstatus[]==0}
@@ -79,11 +82,6 @@ STATE: {Default} ~~ {
 		
 	IF:	Expr {getfellowshipisleader[]==0}
 		DO:	SetState {Standby}
-
-	IF:	Not Expr {getworldname[]==Drunkenfell}
-		DO:	DoAll
-				ChatExpr {`/t `+getcharstringprop[1]+`, This meta was designed by Raile and Che for Drunkenfell.`}
-				SetState {End}
 ~~ }
 
 
@@ -91,11 +89,7 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 	IF:	Always
 		DO:	DoAll
 				DoExpr {vtsetsetting[EnableCombat,`1`]}
-
-	IF:	Expr {getfellowshipisleader[]==1}
-		DO:	DoAll
-				Chat {/f !combat}
-		
+	
 	IF:	All
 			Any
 				ItemCountGE 1 {Jaria's Rune of Dispel}
@@ -115,7 +109,7 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 				SetState {Combat}
 
 	IF:	Any
-			DoExpr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]}
+			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]}
 			ChatMatch {Lord Cynreft says, "My time on this world is brief! Speak with me quickly heroes."}
 		DO:	SetState {Reward}		
 ~~ }
@@ -131,12 +125,16 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 	IF:	All
 			Expr {getfellowshipisleader[]==0}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
-		DO:	SetState {Standby}
+		DO:	DoAll
+				EmbedNav nav0 {[none]}
+				SetState {Standby}
 		
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
-		DO:	SetState {KeyCheck}
+		DO:	DoAll
+				EmbedNav nav0 {[none]}
+				SetState {KeyCheck}
 ~~ }
 
 
@@ -159,7 +157,7 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
 			ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
-				ChatExpr {`/f I am the leader and I have `getitemcountininventorybyname[Ornate Bone Key]` Ornate Bone Keys remaining.`}
+				ChatExpr {`/f I am the leader and I have `+getitemcountininventorybyname[Ornate Bone Key]+` Ornate Bone Keys remaining.`}
 				SetState {KeyTurnin}
 				
 	IF:	All
@@ -181,7 +179,7 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 ~~ }
 
 
-STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in the key - run a watchdog that starts at drop and goes til it gets the Guardian turned in
+STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in the key - watchdog starts at drop and goes til it gets the Guardian turned in
 	IF:	Always
 		DO:	DoAll
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
@@ -218,8 +216,10 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 				EmbedNav nav8 {ToParieth}
 	IF:	All
 			NavEmpty
-			Expr {coordinatedistanceflat[getplayercoordinates[], wobjectgetphysicscoordinates[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]<5}
-		DO:	EmbedNav nav7 {TalkToParieth}
+			Expr {coordinatedistanceflat[getplayercoordinates[], wobjectgetphysicscoordinates[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]]<=7}
+		DO:	DoAll
+				Chat {/f !combat}
+				EmbedNav nav7 {TalkToParieth}
 	
 	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
 		DO:	DoAll
@@ -240,12 +240,12 @@ STATE: {Stuck} ~~ {
 		DO:	EmbedNav nav9 {GYRecall}
 	
 	IF:	All
-			Expr {$Turnin}==Statue
+			Expr {$Turnin==Statue}
 			CellE 482D0104
 		DO:	EmbedNav nav10 {GYRecallToStatue}
 	
 	IF:	All
-			Expr {$Turnin}==Portal
+			Expr {$Turnin==Portal}
 			CellE 482D0104
 		DO:	EmbedNav nav11 {GYRecallToPortal}	
 	
@@ -258,6 +258,22 @@ STATE: {Stuck} ~~ {
 				
 ~~ }
 
+STATE: {FirstTurnin} ~~ {
+	IF:	Always
+		DO: DoAll
+				Chat {/f I will start the first run when everyones ready.  Say !start in fellow to begin.}
+				EmbedNav nav8 {ToParieth}
+	
+	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!start\"$}	
+		DO:	DoAll
+				Chat {/f !combat}
+				EmbedNav nav7 {TalkToParieth}
+	
+	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
+		DO:	DoAll
+				EmbedNav nav1 {CombatPosition}
+				SetState {Combat}	
+~~ }
 
 STATE: {End} ~~ {
 	IF:	Never
@@ -270,7 +286,8 @@ STATE: {End} ~~ {
 NAV: nav0 once ~~ {
 ~~ }
 NAV: nav1 once ~~ {  ~~GY Colo Combat Position
-	pnt -101.852041769028 17.112361462911 2.08333134651184E-05
+	pnt -101.851449179649 17.1110611438751 2.08333134651184E-05
+	pau -101.851449179649 17.1110611438751 2.08333134651184E-05 1000
 ~~ }
 NAV: nav2 circular ~~ { ~~Talk for Reward
 	pnt -101.865237665176 17.129670437177 2.08333134651184E-05
@@ -311,6 +328,7 @@ NAV: nav7 circular ~~ { ~~GYColo drop to Shade of Parieth to start
 ~~ }
 NAV: nav8 once ~~ { ~~Shade of Parieth NPC
 	pnt -101.865380676587 17.1986148357391 2.08333134651184E-05
+	pau -101.865380676587 17.1986148357391 2.08333134651184E-05 1000
 ~~ }
 NAV: nav9 once ~~ {  ~~ GY Recall
 	rcl 47.1886339505513 -83.4169729153315 0.573354148864746 {Call of the Mhoire Forge}
