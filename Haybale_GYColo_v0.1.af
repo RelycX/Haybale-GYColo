@@ -57,6 +57,8 @@
 ~~				chatbox[`/ub givep `+$count+` `+$ItemHere+` to `+$capturegroup_tellchar]
 ~~				/ub mexec chatbox[`/ub vendor addbuy `+$test]
 
+~~TODO Seperate the States for KeyTurnin and talking to the shade to start, problem with watchdog not clearing in that state - really should be in a different state once it gets back into the GYColo anyhow
+
 STATE: {Default} ~~ {
 	IF:	ChatMatch {  %% Haybale_GYColo v.0.1 by Raile and Che of DNF %%  }
 		DO:	None
