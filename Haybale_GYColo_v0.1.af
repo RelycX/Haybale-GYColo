@@ -162,7 +162,9 @@ STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a
 	IF:	Expr {getfellowshipisleader[]==1}
 		DO:	SetState {KeyCheck}
 		
-	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
+	IF:	All
+			ItemCountGE 1 {Ornate Bone Key}
+			ChatMatch {^\[Fellowship\] (|).* (say|says), \"!keycheck\"$}
 		DO:	DoAll
 				ChatExpr {`/f !keycount=`+getitemcountininventorybyname[Ornate Bone Key]}
 				SetState {Standby}
@@ -196,23 +198,43 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 
 
 STATE: {KeyListen} ~~ {
-	IF: ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {}  ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
-		DO: DoAll
-				DoExpr {$KeySeenCount=$KeySeenCount+1}
-				SetState {KeyListen}
 
 	IF: All
-			ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {}
+			ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {} ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
 			Expr {cnumber[$capturegroup_keycount]>$HighestKeyCount}  ~~ Set the highest key count
 		DO: DoAll
 				DoExpr {$HighestKeyCount=cnumber[$capturegroup_keycount]}
-				DoExpr {$HighestKeyName=$capturegroup_name}
+				DoExpr {$HighestKeyName=$capturegroup_name}	
+				DoExpr {$KeySeenCount=$KeySeenCount+1}
+				SetState {KeyListen}
+		
+	IF: Expr {$KeySeenCount>=1}
+		DO: DoAll
 				SetState {AssignLeader}
-
-	IF: Expr {$KeySeenCount==getfellowshipcount[]-1}  ~~ We've seen all the key counts handle assigning leader
-		DO: None
 ~~ }
 
+STATE: {AssignLeader} ~~ {
+	IF:	Always
+		DO:	DoAll
+				DoExpr {chatbox[`/ub fellow leader `+getvar[HighestKeyName]]}
+	IF:	Always
+		DO:	DoAll
+				DoExpr {setvar[HighestKeyCount, 0]}
+				DoExpr {setvar[KeySeenCount, 0]}
+
+~~				Chat {/ub mexec chatbox[`/ub fellow leader `+getvar[HighestKeyName]]}
+~~				ChatExpr {`/ub fellow leader `+$HighestKeyName}				
+~~				ChatExpr {`/ub fellow recruit `+listgetitem[getvar[charlist],getvar[counter]]}
+~~				DoExpr {chatbox[\`/ub fellow leader \`+$HighestKeyName+`\`]}
+~~				chatbox[`/ub givep `+$count+` `+$ItemHere+` to `+$capturegroup_tellchar]
+~~				/ub mexec chatbox[`/ub vendor addbuy `+$test]
+	
+	IF:	ChatMatch {You have passed leadership of the fellowship to}
+		DO:	DoAll
+				DoExpr {setvar[HighestKeyName, ``]}
+				SetState {Standby}
+				
+~~ }
 
 STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in the key - watchdog starts at drop and goes til it gets the Guardian turned in
 	IF:	Always
@@ -317,11 +339,6 @@ STATE: {FirstTurnin} ~~ {
 			NavEmpty
 			CellE 0095010D
 		DO:	SetState {Combat}	
-~~ }
-
-STATE: {AssignLeader} ~~ {
-	IF:	Never
-		DO:	None
 ~~ }
 
 STATE: {End} ~~ {
