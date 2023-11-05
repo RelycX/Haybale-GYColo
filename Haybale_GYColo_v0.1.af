@@ -85,7 +85,7 @@ STATE: {Default} ~~ {
 	
 	IF: Not BlockE 00950000
 		DO:	DoAll
-				ChatExpr {`/t `+getcharstringprop[1]+`, Must be within GY Colosseum to begin.`}
+				ChatExpr {`/t `+getcharstringprop[1]+`, Must be within GY Colosseum to begin.  To navigate to the GY Colosseum portal, say !gycolo in fellow.`}
 				SetState {Stopped}
 
 	IF:	All
@@ -303,9 +303,16 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 ~~ }
 
 
-STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume
+STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume, can nav to GYColo entrance with command
 	IF: BlockE 00950000
-		DO:	SetState {Default}	
+		DO:	SetState {Default}
+	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!gycolo\"$}	
+		DO:	DoAll
+				EmbedNav nav9 {GYRecall}
+	IF:	All
+			NavEmpty
+			CellE 482D0104
+		DO:	EmbedNav nav11 {GYRecallToPortal}			
 ~~ }
 
 
