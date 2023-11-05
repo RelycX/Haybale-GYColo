@@ -43,6 +43,19 @@
 ~~ 0095010B - Shade of Parieth (NPC to start GY Colo)
 ~~ 482E0121 - Surface drop for Keyturnin 
 ~~ 482D0104 - GY Recall Drop
+~~ /ub mexec listmap[listfromrange[0,strlen[$NewLeader]-1],`$NewLeader{$1}+\\=+ord[$NewLeader{$1}]`]     -this will look at a variable and pull it apart character by character
+
+~~Troubleshooting
+~~				ChatExpr {`/f [`+$NewLeader+`] is `+tostring[strlen[$NewLeader]]+` letters long`}
+~~				ChatExpr {`/f [`+$NewLeader+`] is `+tostring[strlen[listreduce[listfromrange[0,strlen[$NewLeader]-1],\`iif[$NewLeader{$1}#[A-z' ],($2||\\`\\`)+$NewLeader{$1},$2||\\`\\`]\`]]]+` letters long`}
+~~				ChatExpr {`/ub mexec listmap[listfromrange[0,strlen[$NewLeader]-1],`$NewLeader{$1}+\\=+ord[$NewLeader{$1}]]
+~~			ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {} ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
+~~				Chat {/ub mexec chatbox[`/ub fellow leader `+getvar[HighestKeyName]]}
+~~				ChatExpr {`/ub fellow leader `+$HighestKeyName}				
+~~				ChatExpr {`/ub fellow recruit `+listgetitem[getvar[charlist],getvar[counter]]}
+~~				DoExpr {chatbox[\`/ub fellow leader \`+$HighestKeyName+`\`]}
+~~				chatbox[`/ub givep `+$count+` `+$ItemHere+` to `+$capturegroup_tellchar]
+~~				/ub mexec chatbox[`/ub vendor addbuy `+$test]
 
 STATE: {Default} ~~ {
 	IF:	ChatMatch {  %% Haybale_GYColo v.0.1 by Raile and Che of DNF %%  }
@@ -62,9 +75,9 @@ STATE: {Default} ~~ {
 				
 	IF: Always
 		DO: DoAll
-				DoExpr {setvar[HighestKeyCount, 0]}
-				DoExpr {setvar[HighestKeyName, ``]}
-				DoExpr {setvar[KeySeenCount, 0]}
+				DoExpr {setvar[HighestKeyCount,0]}
+				DoExpr {setvar[HighestKeyName,``]}
+				DoExpr {setvar[KeySeenCount,0]}
 	
 	IF:	Not Expr {getworldname[]==Drunkenfell}
 		DO:	DoAll
@@ -200,7 +213,7 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 STATE: {KeyListen} ~~ {
 
 	IF: All
-			ChatCapture {\[Fellowship\] (?<name>.*) (say|says), \"!keycount=(?<keycount>.*)\"} {} ~~ Update how many keys we've seen, fill the variables $capturegroup_keycount and $capturegroup_name
+			ChatCapture {\[Fellowship\] <[^>]+>(?<name>[^<]+)<[^\>]+> (say|says), \"!keycount=(?<keycount>.*)\"} {}
 			Expr {cnumber[$capturegroup_keycount]>$HighestKeyCount}  ~~ Set the highest key count
 		DO: DoAll
 				DoExpr {$HighestKeyCount=cnumber[$capturegroup_keycount]}
@@ -208,6 +221,10 @@ STATE: {KeyListen} ~~ {
 				DoExpr {$KeySeenCount=$KeySeenCount+1}
 				SetState {KeyListen}
 		
+	IF:	Not Expr {$HighestKeyName==``}
+		DO:	DoAll
+				DoExpr {$NewLeader=$HighestKeyName}
+	
 	IF: Expr {$KeySeenCount>=1}
 		DO: DoAll
 				SetState {AssignLeader}
@@ -216,18 +233,13 @@ STATE: {KeyListen} ~~ {
 STATE: {AssignLeader} ~~ {
 	IF:	Always
 		DO:	DoAll
-				DoExpr {chatbox[`/ub fellow leader `+getvar[HighestKeyName]]}
+				DoExpr {chatbox[`/ub fellow leader `+getvar[NewLeader]]}
+	
 	IF:	Always
 		DO:	DoAll
 				DoExpr {setvar[HighestKeyCount, 0]}
 				DoExpr {setvar[KeySeenCount, 0]}
-
-~~				Chat {/ub mexec chatbox[`/ub fellow leader `+getvar[HighestKeyName]]}
-~~				ChatExpr {`/ub fellow leader `+$HighestKeyName}				
-~~				ChatExpr {`/ub fellow recruit `+listgetitem[getvar[charlist],getvar[counter]]}
-~~				DoExpr {chatbox[\`/ub fellow leader \`+$HighestKeyName+`\`]}
-~~				chatbox[`/ub givep `+$count+` `+$ItemHere+` to `+$capturegroup_tellchar]
-~~				/ub mexec chatbox[`/ub vendor addbuy `+$test]
+				DoExpr {setvar[NewLeader,``]}
 	
 	IF:	ChatMatch {You have passed leadership of the fellowship to}
 		DO:	DoAll
