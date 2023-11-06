@@ -57,7 +57,6 @@
 ~~				chatbox[`/ub givep `+$count+` `+$ItemHere+` to `+$capturegroup_tellchar]
 ~~				/ub mexec chatbox[`/ub vendor addbuy `+$test]
 
-~~TODO Seperate the States for KeyTurnin and talking to the shade to start, problem with watchdog not clearing in that state - really should be in a different state once it gets back into the GYColo anyhow
 
 STATE: {Default} ~~ {
 	IF:	ChatMatch {  %% Haybale_GYColo v.0.1 by Raile and Che of DNF %%  }
@@ -111,6 +110,7 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 		DO:	DoAll
 				DoExpr {vtsetsetting[NavPriorityBoost,`0`]}
 				DoExpr {vtsetsetting[EnableCombat,`1`]}
+				DoExpr {vtsetsetting[EnableBuffing,`1`]}
 				
 	IF: Always
 		DO: DoAll
@@ -146,22 +146,14 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 	IF:	Always
 		DO:	DoAll
 				EmbedNav nav2 {CollectReward}
-				DoExpr {setvar[RunCount,$RunCount+1]}
-				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
-	
-	IF: Expr {getfellowshipisleader[]==1}
-		DO: DoAll
-				DoExpr {stopwatchstop[$Runtime]}
-				DoExpr {$minutes=cstr[ceiling[stopwatchelapsedseconds[$Runtime]/60]]}
-				DoExpr {$seconds=ceiling[stopwatchelapsedseconds[$Runtime]%60]}
-				DoExpr {$seconds=ifthen[$seconds<=9, `\`0\`+cstr[$seconds]`, `cstr[$seconds]`]}
-				ChatExpr {`/f Elapsed time: `+$minutes+`:`+$seconds}
-	
+
 	IF:	All
 			Expr {getfellowshipisleader[]==0}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
 		DO:	DoAll
 				EmbedNav nav0 {[none]}
+				DoExpr {setvar[RunCount,$RunCount+1]}
+				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
 				SetState {Standby}
 		
 	IF:	All
@@ -169,6 +161,13 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
 		DO:	DoAll
 				EmbedNav nav0 {[none]}
+				DoExpr {stopwatchstop[$Runtime]}
+				DoExpr {$minutes=cstr[ceiling[stopwatchelapsedseconds[$Runtime]/60]]}
+				DoExpr {$seconds=ceiling[stopwatchelapsedseconds[$Runtime]%60]}
+				DoExpr {$seconds=ifthen[$seconds<=9, `\`0\`+cstr[$seconds]`, `cstr[$seconds]`]}
+				DoExpr {setvar[RunCount,$RunCount+1]}
+				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
+				ChatExpr {`/f Combat time this round: `+$minutes+`:`+$seconds}
 				SetState {KeyCheck}
 ~~ }
 
@@ -206,13 +205,14 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
 			ItemCountLE 0 {Ornate Bone Key}
 		DO: DoAll
-				ChatExpr {\/f \!keycheck}
 				SetState {KeyListen}
 
 ~~ }
 
 
 STATE: {KeyListen} ~~ {
+	IF:	Always
+		DO:	ChatExpr {\/f \!keycheck}
 
 	IF: All
 			ChatCapture {\[Fellowship\] <[^>]+>(?<name>[^<]+)<[^\>]+> (say|says), \"!keycount=(?<keycount>.*)\"} {}
@@ -254,6 +254,7 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 	IF:	Always
 		DO:	DoAll
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
+				DoExpr {vtsetsetting[EnableBuffing,`0`]}
 				EmbedNav nav3 {SurfaceExit}
 	
 	IF:	All
@@ -282,10 +283,17 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 	IF:	All
 			NavEmpty
 			CellE 0095010F
+		DO:	SetState {StartRound}
+	
+~~ }
+
+
+STATE: {StartRound}
+	IF:	Always
 		DO:	DoAll
-				ClearWatchdog
 				Chat {/f The next round is about to start.}
 				EmbedNav nav8 {ToParieth}
+	
 	IF:	All
 			NavEmpty
 			Expr {coordinatedistanceflat[getplayercoordinates[], wobjectgetphysicscoordinates[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]]<=7}
@@ -300,14 +308,15 @@ STATE: {KeyTurnin} ~~ {  ~~ goes outside, goes to the Guardian Statue, turns in 
 	IF:	All
 			NavEmpty
 			CellE 0095010D
-		DO:	SetState {Combat}	
-			
+		DO:	SetState {Combat}					
+
 ~~ }
 
 
 STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume, can nav to GYColo entrance with command
 	IF: BlockE 00950000
 		DO:	SetState {Default}
+	
 	IF:	ChatMatch {^\[Fellowship\] (|).* (say|says), \"!gycolo\"$}	
 		DO:	DoAll
 				EmbedNav nav9 {GYRecall}
@@ -334,11 +343,14 @@ STATE: {Stuck} ~~ {
 	
 	IF:	All
 			NavEmpty
-			Any
-				CellE 482E0016
-				CellE 0095010F
-		DO:	SetState {KeyTurnin}
-				
+			CellE 482E0016
+		DO:	SetState {KeyTurnin}	
+	
+	IF:	All
+			NavEmpty
+			CellE 0095010F
+		DO:	SetState {StartRound}	
+		
 ~~ }
 
 STATE: {FirstTurnin} ~~ {
@@ -360,11 +372,6 @@ STATE: {FirstTurnin} ~~ {
 			NavEmpty
 			CellE 0095010D
 		DO:	SetState {Combat}	
-~~ }
-
-STATE: {End} ~~ {
-	IF:	Never
-		DO:	None
 ~~ }
 
 
