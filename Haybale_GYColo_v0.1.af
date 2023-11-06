@@ -91,8 +91,9 @@ STATE: {Default} ~~ {
 
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
-			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]}
+			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==1}
 		DO:	SetState {FirstTurnin}
+	
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
 		DO:	SetState {KeyCheck}
@@ -194,8 +195,12 @@ STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a
 
 
 STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
+	IF:	Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==1}
+		DO:	SetState {StartRound}
+		
 	IF:	All
 			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
+			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==0}
 			ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
 				ChatExpr {`/f I am the leader and I have `+getitemcountininventorybyname[Ornate Bone Key]+` Ornate Bone Keys remaining.`}
@@ -203,6 +208,7 @@ STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that 
 				
 	IF:	All
 			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
+			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==0}
 			ItemCountLE 0 {Ornate Bone Key}
 		DO: DoAll
 				SetState {KeyListen}
@@ -303,7 +309,7 @@ STATE: {StartRound}
 	
 	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
 		DO:	DoAll
-				EmbedNav nav1 {CombatPosition}
+				EmbedNav nav12 {CombatPositionLeader}
 
 	IF:	All
 			NavEmpty
@@ -366,7 +372,7 @@ STATE: {FirstTurnin} ~~ {
 	
 	IF:	ChatMatch {Shade of Parieth tells you, "Lord Cynreft has summoned me here to warn off those}
 		DO:	DoAll
-				EmbedNav nav1 {CombatPosition}
+				EmbedNav nav12 {CombatPositionLeader}
 
 	IF:	All
 			NavEmpty
@@ -551,4 +557,11 @@ NAV: nav11 once ~~ {  ~~stuck recovery run from GYRecall to portal
 	pnt -44.0991804917653 -64.6069468816121 0.0750208298365275
 	pnt -44.0999232610067 -64.5956731160482 0.0750208298365275
 	ptl -44.0989941596985 -64.5963679631551 0.0750208298365275 -44.1004166603088 -64.5902500152588 0.0747375041246414 14 {Gateway}
+~~ }
+NAV: nav12 once ~~ {  ~~Combat Position for Leader
+	pnt -101.865830222766 17.1993418097496 2.08333134651184E-05
+	pnt -101.862137738864 17.1700787782669 2.08333134651184E-05
+	pnt -101.857848644257 17.13807117939 2.08333134651184E-05
+	pnt -101.851809597015 17.1133545557658 2.08333134651184E-05
+	pau -101.851809597015 17.1133545557658 2.08333134651184E-05 1000
 ~~ }
