@@ -92,7 +92,9 @@ STATE: {Default} ~~ {
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
 			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==1}
-		DO:	SetState {FirstTurnin}
+		DO:	DoAll
+				ChatExpr {\/f Joining as a leader}
+				SetState {FirstTurnin}
 	
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
@@ -102,7 +104,9 @@ STATE: {Default} ~~ {
 		DO: Chat {/say I need a fellow invite.}
 		
 	IF:	Expr {getfellowshipisleader[]==0}
-		DO:	SetState {Standby}
+		DO:	DoAll
+				ChatExpr {\/f Joining as a follower}
+				SetState {Standby}
 ~~ }
 
 
