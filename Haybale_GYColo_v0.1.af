@@ -116,11 +116,6 @@ STATE: {Combat} ~~ {  ~~ Combat is the state that's active when fighting (change
 				DoExpr {vtsetsetting[NavPriorityBoost,`0`]}
 				DoExpr {vtsetsetting[EnableCombat,`1`]}
 				DoExpr {vtsetsetting[EnableBuffing,`1`]}
-				
-	IF: Always
-		DO: DoAll
-				DoExpr {setvar[Runtime, stopwatchcreate[]]}
-				DoExpr {stopwatchstart[$Runtime]}
 
 	IF:	All
 			Any
@@ -160,20 +155,38 @@ STATE: {Reward} ~~ {  ~~ is the state that is called when Lord Cynreft Mhoire ap
 				DoExpr {setvar[RunCount,$RunCount+1]}
 				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
 				SetState {Standby}
-		
+
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
 			ChatMatch {Lord Cynreft Mhoire tells you, "I thank you again for your bravery in destroying my corrupted form."}
 		DO:	DoAll
 				EmbedNav nav0 {[none]}
+				SetState {Report}
+~~ }
+
+
+STATE: {Report} ~~ {  ~~ the state where the leader reports the run statistics
+	IF: Always
+		DO: DoAll
+				DoExpr {setvar[RunCount,$RunCount+1]}
+				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
+
+	IF: Expr {testvar[Runtime]}  ~~ Only report if we've run at least once and have a $Runtime variable set
+		DO: DoAll
 				DoExpr {stopwatchstop[$Runtime]}
 				DoExpr {$minutes=cstr[ceiling[stopwatchelapsedseconds[$Runtime]/60]]}
 				DoExpr {$seconds=ceiling[stopwatchelapsedseconds[$Runtime]%60]}
 				DoExpr {$seconds=ifthen[$seconds<=9, `\`0\`+cstr[$seconds]`, `cstr[$seconds]`]}
-				DoExpr {setvar[RunCount,$RunCount+1]}
-				ChatExpr {`/t `+getcharstringprop[1]+`, I have been rewarded `+$RunCount+` times this session.`}
+				
 				ChatExpr {`/f Combat time this round: `+$minutes+`:`+$seconds}
-				SetState {KeyCheck}
+
+	IF: Always
+		DO: DoAll
+				DoExpr {setvar[Runtime, stopwatchcreate[]]}
+				DoExpr {stopwatchstart[$Runtime]}
+
+	IF: Always
+		DO: SetState {KeyCheck}
 ~~ }
 
 
