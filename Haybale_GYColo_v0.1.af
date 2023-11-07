@@ -69,6 +69,7 @@ STATE: {Default} ~~ {
 		DO:	DoAll
 				DoExpr {clearallvars[]}
 				EmbedNav nav0 {[none]}
+				DoExpr {vtsetsetting[EnableLooting,`1`]}
 				DoExpr {vtsetsetting[EnableBuffing,`1`]}
 				DoExpr {vtsetsetting[EnableCombat,`0`]}
 				DoExpr {vtsetsetting[EnableNav,`1`]}
@@ -91,7 +92,7 @@ STATE: {Default} ~~ {
 
 	IF:	All
 			Expr {getfellowshipisleader[]==1}
-			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==1}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==7}
 		DO:	DoAll
 				ChatExpr {\/f Joining as a leader}
 				SetState {FirstTurnin}
@@ -212,20 +213,20 @@ STATE: {Standby} ~~ {  ~~ this state is for followers, it will listen for when a
 
 
 STATE: {KeyCheck} ~~ {  ~~ won't run until the reward NPC despawns: checks that the leader still has a key to turn in, if not, runs a command for everyone to respond with their key quantity
-	IF:	Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==1}
+	IF:	Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==7}
 		DO:	SetState {StartRound}
 		
 	IF:	All
-			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
-			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==0}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]]==1}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==1}
 			ItemCountGE 1 {Ornate Bone Key}
 		DO:	DoAll
 				ChatExpr {`/f I am the leader and I have `+getitemcountininventorybyname[Ornate Bone Key]+` Ornate Bone Keys remaining.`}
 				SetState {KeyTurnin}
 				
 	IF:	All
-			Expr {wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]==0}
-			Expr {wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]==0}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Lord Cynreft Mhoire]]==1}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==1}
 			ItemCountLE 0 {Ornate Bone Key}
 		DO: DoAll
 				SetState {KeyListen}
@@ -346,7 +347,18 @@ STATE: {Stopped} ~~ {  ~~ waits until the player enters GY Colo to resume, can n
 	IF:	All
 			NavEmpty
 			CellE 482D0104
-		DO:	EmbedNav nav11 {GYRecallToPortal}			
+		DO:	EmbedNav nav11 {GYRecallToPortal}
+	IF:	All
+			NavEmpty
+			CellE 482E0130   ~~CellE for Gateway location outside outside
+		DO:	DoExpr {vtsetsetting[EnableCombat,`1`]}	
+	IF: All
+			CellE 482E0130
+			Expr {($tmp=wobjectfindnearestbynameandobjectclass[14,Gateway])&&coordinatedistancewithz[getplayercoordinates[],wobjectgetphysicscoordinates[$tmp]]<=8}
+		DO:	DoAll
+				DoExpr {vtsetsetting[EnableCombat,`0`]}
+				DoExpr {vtsetsetting[EnableLooting,`0`]}
+				DoExpr {actiontryuseitem[wobjectfindnearestbyobjectclass[14]]}		
 ~~ }
 
 
