@@ -91,14 +91,22 @@ STATE: {Default} ~~ {
 				SetState {Stopped}
 
 	IF:	All
+			CellE 0095010F
 			Expr {getfellowshipisleader[]==1}
-			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==7}
 		DO:	DoAll
 				ChatExpr {\/f Joining as a leader}
-				SetState {FirstTurnin}
-	
+				EmbedNav nav8 {ToParieth}
+
 	IF:	All
+			NavEmpty
 			Expr {getfellowshipisleader[]==1}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==7}
+		DO:	SetState {FirstTurnin}
+				
+	IF:	All
+			NavEmpty
+			Expr {getfellowshipisleader[]==1}
+			Expr {getobjectinternaltype[wobjectfindnearestbynameandobjectclass[37,Shade of Parieth]]==1}
 		DO:	SetState {KeyCheck}
 		
 	IF: Expr {getfellowshipstatus[]==0}
